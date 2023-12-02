@@ -43,6 +43,16 @@ func (g Game) Possible(red int, green int, blue int) bool {
 	return true
 }
 
+func (g Game) Power() int {
+	var red, green, blue int
+	for _, p := range g.Picks {
+		red = max(red, p.Red)
+		green = max(green, p.Green)
+		blue = max(blue, p.Blue)
+	}
+	return red * green * blue
+}
+
 func parseDice(pick string) (Pick, error) {
 	l := strings.Split(pick, ",")
 	var p Pick
@@ -108,9 +118,8 @@ func main() {
 	sum := 0
 	for scanner.Scan() {
 		game := parseLine(scanner.Text())
-		if game.Possible(12, 13, 14) {
-			sum += game.ID
-		}
+		power := game.Power()
+		sum += power
 	}
 	if err := scanner.Err(); err != nil {
 		fmt.Fprintf(os.Stderr, "failed to read line: %v", err)
