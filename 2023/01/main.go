@@ -6,21 +6,61 @@ import (
 	"os"
 )
 
-func digit(c byte) *int {
-	m := map[byte]int{
-		'0': 0, '1': 1, '2': 2, '3': 3, '4': 4,
-		'5': 5, '6': 6, '7': 7, '8': 8, '9': 9,
+type tupple struct {
+	d int
+	n int
+}
+
+func stringdigit(s string) *int {
+	if len(s) < 2 {
+		return nil
 	}
-	if i, ok := m[c]; ok {
-		return &i
+	next := func(suffix string, digit int) func(s string) *int {
+		return func(s string) *int {
+			if len(s) < len(suffix) {
+				return nil
+			}
+			if s[:len(suffix)] == suffix {
+				return &digit
+			}
+			return nil
+		}
+	}
+
+	m := map[string]func(string) *int{
+		"on": next("e", 1),
+		"tw": next("o", 2),
+		"th": next("ree", 3),
+		"fo": next("ur", 4),
+		"fi": next("ve", 5),
+		"si": next("x", 6),
+		"se": next("ven", 7),
+		"ei": next("ght", 8),
+		"ni": next("ne", 9),
+	}
+	if parse, ok := m[s[:2]]; ok {
+		return parse(s[2:])
 	}
 	return nil
 }
 
+func digit(s string) *int {
+	if len(s) == 0 {
+		return nil
+	}
+	m := map[byte]int{
+		'0': 0, '1': 1, '2': 2, '3': 3, '4': 4,
+		'5': 5, '6': 6, '7': 7, '8': 8, '9': 9,
+	}
+	if digit, ok := m[s[0]]; ok {
+		return &digit
+	}
+	return stringdigit(s)
+}
+
 func firstDigit(s string) int {
 	for i := 0; i < len(s); i++ {
-		c := s[i]
-		if d := digit(c); d != nil {
+		if d := digit(s[i:]); d != nil {
 			return *d
 		}
 	}
@@ -29,8 +69,7 @@ func firstDigit(s string) int {
 
 func lastDigit(s string) int {
 	for i := len(s) - 1; i >= 0; i-- {
-		c := s[i]
-		if d := digit(c); d != nil {
+		if d := digit(s[i:]); d != nil {
 			return *d
 		}
 	}
