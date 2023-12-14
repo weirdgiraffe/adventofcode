@@ -91,9 +91,9 @@ func solve(pattern []string) int {
 		fmt.Printf("%2d | %s\n", i, s)
 	}
 
-	l := pattern
-	for i := 0; i < 1; i++ {
-		l = tilt(totheleft(l))
+	l := totheleft(pattern)
+	for i := 0; i < 3; i++ {
+		l = tilt(l)
 		fmt.Println("north")
 		for i, s := range totheright(l) {
 			fmt.Printf("%2d | %s\n", i, s)
@@ -116,6 +116,12 @@ func solve(pattern []string) int {
 		for i, s := range totheleft(totheleft(l)) {
 			fmt.Printf("%2d | %s\n", i, s)
 		}
+		l = totheright(l)
+	}
+
+	fmt.Println("final")
+	for i, s := range totheright(l) {
+		fmt.Printf("%2d | %s\n", i, s)
 	}
 
 	return load(l)
