@@ -93,26 +93,27 @@ func solve(pattern []string) int {
 
 	l := pattern
 	for i := 0; i < 1; i++ {
-		l = totheright(tilt(totheleft(l)))
+		l = tilt(totheleft(l))
 		fmt.Println("north")
-		for i, s := range l {
+		for i, s := range totheright(l) {
 			fmt.Printf("%2d | %s\n", i, s)
 		}
-		l = tilt(l)
+
+		l = tilt(totheright(l))
 		fmt.Println("east")
 		for i, s := range l {
 			fmt.Printf("%2d | %s\n", i, s)
 		}
 
-		l = totheleft(tilt(totheright(l)))
+		l = tilt(totheright(l))
 		fmt.Println("south")
-		for i, s := range l {
+		for i, s := range totheleft(l) {
 			fmt.Printf("%2d | %s\n", i, s)
 		}
 
-		l = totheright(totheright(tilt(totheleft(totheleft(l)))))
+		l = tilt(totheright(l))
 		fmt.Println("west")
-		for i, s := range l {
+		for i, s := range totheleft(totheleft(l)) {
 			fmt.Printf("%2d | %s\n", i, s)
 		}
 	}
