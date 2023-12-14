@@ -2,6 +2,8 @@ package main
 
 import (
 	"bufio"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"os"
 )
@@ -40,19 +42,6 @@ func totheleft(lines []string) []string {
 	return out
 }
 
-func load(l []string) int {
-	n := len(l)
-	sum := 0
-	for _, s := range l {
-		for j, c := range s {
-			if c == 'O' {
-				sum += (n - j)
-			}
-		}
-	}
-	return sum
-}
-
 func tilt(l []string) []string {
 	for si := range l {
 		b := []byte(l[si])
@@ -85,45 +74,59 @@ func tilt(l []string) []string {
 	return l
 }
 
+// we expect the pattern already pointing to the noth here
+func load(l []string) int {
+	n := len(l)
+	sum := 0
+	for _, s := range l {
+		for j, c := range s {
+			if c == 'O' {
+				sum += (n - j)
+			}
+		}
+	}
+	return sum
+}
+
+func hash(l []string) string {
+	h := sha256.New()
+	for _, s := range l {
+		h.Write([]byte(s))
+	}
+	return hex.EncodeToString(h.Sum(nil))
+}
+
 func solve(pattern []string) int {
-	fmt.Println("original")
-	for i, s := range pattern {
-		fmt.Printf("%2d | %s\n", i, s)
-	}
-
+	m := make(map[string]int)
 	l := totheleft(pattern)
-	for i := 0; i < 3; i++ {
-		l = tilt(l)
-		fmt.Println("north")
-		for i, s := range totheright(l) {
-			fmt.Printf("%2d | %s\n", i, s)
+	n := 1000000000
+	cycle := false
+	for i := 0; i < n; i++ {
+		h := hash(l)
+		if prev, ok := m[h]; ok {
+			if !cycle {
+				// we have detected a cycle. now we need to understand
+				// how many iterations we actually need more in order
+				// to match the target
+				offt := i - prev
+				ileft := n - i
+				n = i + (ileft % offt)
+				cycle = true
+			}
+		} else {
+			m[h] = i
 		}
 
-		l = tilt(totheright(l))
-		fmt.Println("east")
-		for i, s := range l {
-			fmt.Printf("%2d | %s\n", i, s)
-		}
-
-		l = tilt(totheright(l))
-		fmt.Println("south")
-		for i, s := range totheleft(l) {
-			fmt.Printf("%2d | %s\n", i, s)
-		}
-
-		l = tilt(totheright(l))
-		fmt.Println("west")
-		for i, s := range totheleft(totheleft(l)) {
-			fmt.Printf("%2d | %s\n", i, s)
-		}
+		tilt(l)
 		l = totheright(l)
-	}
+		tilt(l)
+		l = totheright(l)
+		tilt(l)
+		l = totheright(l)
+		tilt(l)
+		l = totheright(l)
 
-	fmt.Println("final")
-	for i, s := range totheright(l) {
-		fmt.Printf("%2d | %s\n", i, s)
 	}
-
 	return load(l)
 }
 
