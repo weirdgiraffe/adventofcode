@@ -5,12 +5,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
-)
-
-const (
-	Operational = '.'
-	Broken      = '#'
-	Unknown     = '?'
+	"time"
 )
 
 func record(line string) (conditions string, checksum []int) {
@@ -22,86 +17,59 @@ func record(line string) (conditions string, checksum []int) {
 	return l[0], checksum
 }
 
-type Seq struct {
-	b []byte
-}
-
-func (s *Seq) Clear() {
-	s.b = s.b[:0]
-}
-
-func (s *Seq) Add(c byte) {
-	s.b = append(s.b, c)
-}
-
-func (s Seq) Empty() bool {
-	return len(s.b) == 0
-}
-
 func arrangements(line string) int {
 	l, cl := record(line)
-	return count("", 0, l, cl)
+	n := countArrangements(l, 0, cl, "")
+	return n
 }
 
-const Ident = "|   "
-
-func count(prefix string, broken int, line string, rest []int) int {
+func countArrangements(line string, broken int, rest []int, v string) int {
 	if len(line) == 0 {
 		if len(rest) == 1 && rest[0] == broken {
+			// fmt.Println("OK:", v)
 			return 1
 		}
 		if len(rest) == 0 {
+			// fmt.Println("OK:", v)
 			return 1
 		}
-		return 0 // if line is empty then there are no arrangements
+		// fmt.Println("FAILED:", v)
+		return 0
+	}
+	c := line[0]
+	if c == '#' {
+		if len(rest) == 0 {
+			// fmt.Println("FAILED:", v)
+			return 0
+		}
+		return countArrangements(line[1:], broken+1, rest, v+"#")
+	}
+	if c == '?' {
+		return countArrangements("#"+line[1:], broken, rest, v) +
+			countArrangements("."+line[1:], broken, rest, v)
 	}
 
-	fmt.Printf("%sL %s B:%d R:%v", prefix, line, broken, rest)
-
-	n := 0
-	switch line[0] {
-	case Broken:
-		fmt.Printf(" -> #\n")
-		n += count(prefix+Ident, broken+1, line[1:], rest)
-	case Unknown:
-		fmt.Printf(" -> ?[#]\n")
-		n += count(prefix+Ident, broken+1, line[1:], rest)
-
-		fmt.Printf("%sL %s B:%d R:%v -> ?[.]", prefix, line, broken, rest)
-		if len(rest) > 0 {
-			if broken == rest[0] {
-				fmt.Printf(" POP: %d", broken)
-				broken = 0
-				rest = rest[1:]
-			}
+	if len(rest) > 0 {
+		if broken == rest[0] {
+			broken = 0
+			rest = rest[1:]
 		}
-		fmt.Println()
-		if broken == 0 {
-			n += count(prefix+Ident, 0, line[1:], rest)
-		}
-	case Operational:
-		if len(rest) > 0 {
-			if broken == rest[0] {
-				fmt.Printf(" POP: %d", broken)
-				broken = 0
-				rest = rest[1:]
-			}
-		}
-		fmt.Println()
-		if broken == 0 {
-			n += count(prefix+Ident, 0, line[1:], rest)
+		if broken != 0 {
+			// fmt.Println("FAILED:", v)
+			return 0
 		}
 	}
-	fmt.Printf("%sEXIT: %d\n", prefix, n)
-	return n
+	return countArrangements(line[1:], 0, rest, v+".")
 }
 
 func part1(data string) int {
 	sum := 0
 	for _, line := range strings.Split(data, "\n") {
-		sum += arrangements(line)
+		if line != "" {
+			sum += arrangements(line)
+		}
 	}
-	return 0
+	return sum
 }
 
 func main() {
@@ -109,6 +77,7 @@ func main() {
 	if err != nil {
 		panic("failed to read input.txt")
 	}
+	t0 := time.Now()
 	sum := part1(string(data))
-	fmt.Println("sum=", sum)
+	fmt.Println("sum=", sum, "elapsed:", time.Since(t0))
 }
