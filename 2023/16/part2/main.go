@@ -9,18 +9,6 @@ import (
 	"time"
 )
 
-func count(lines [][]byte) int {
-	n := 0
-	for _, line := range lines {
-		for _, c := range line {
-			if c != 0 {
-				n++
-			}
-		}
-	}
-	return n
-}
-
 const (
 	U = 1
 	D = 2
@@ -149,65 +137,36 @@ func pass(l, o [][]byte, i, j int, direction byte) {
 	}
 }
 
-func debug(o [][]byte) {
-	for i := range o {
-		for _, c := range o[i] {
-			s := ""
-			switch c {
-			case U:
-				s = "U"
-			case R:
-				s = "R"
-			case L:
-				s = "L"
-			case D:
-				s = "L"
-			case UR:
-				s = "UR"
-			case UL:
-				s = "UL"
-			case DR:
-				s = "DR"
-			case DL:
-				s = "DL"
-			case URD:
-				s = "URD"
-			case ULD:
-				s = "ULD"
-			case URLD:
-				s = "URLD"
-			}
-			fmt.Printf("[%4s]", s)
-		}
-		fmt.Println()
-	}
-}
-
-func final(o [][]byte) {
-	for i := range o {
-		for _, c := range o[i] {
-			if c != 0 {
-				c = '#'
-			} else {
-				c = '.'
-			}
-			fmt.Printf("%c", c)
-		}
-		fmt.Println()
-	}
-}
-
 func variant(l, o [][]byte, i, j int, direction byte) int {
 	pass(l, o, i, j, direction)
 	return count(o)
 }
 
-var mx sync.Mutex
+func count(lines [][]byte) int {
+	n := 0
+	for _, line := range lines {
+		for _, c := range line {
+			if c != 0 {
+				n++
+			}
+		}
+	}
+	return n
+}
 
 func solve(lines []string) int {
 	l := make([][]byte, len(lines))
 	for i, line := range lines {
 		l[i] = []byte(line)
+	}
+	pool := sync.Pool{
+		New: func() any {
+			o := make([][]byte, len(lines))
+			for i, line := range lines {
+				o[i] = bytes.Repeat([]byte{0}, len(line))
+			}
+			return &o
+		},
 	}
 
 	var wg sync.WaitGroup
@@ -215,11 +174,16 @@ func solve(lines []string) int {
 	do := func(i, j int, direction byte) {
 		wg.Add(1)
 		go func() {
-			o := make([][]byte, len(lines))
-			for i, line := range lines {
-				o[i] = bytes.Repeat([]byte{0}, len(line))
-			}
+			v := pool.Get()
+			o := *v.(*[][]byte)
 			out <- variant(l, o, i, j, direction)
+
+			for i := range o {
+				for j := range o[i] {
+					o[i][j] = 0
+				}
+			}
+			pool.Put(v)
 			wg.Done()
 		}()
 	}
