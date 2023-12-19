@@ -20,5 +20,5 @@ func TestSolve(t *testing.T) {
 		`..//.|....`,
 	}
 	n := solve(input)
-	require.Equal(t, 46, n)
+	require.Equal(t, 51, n)
 }

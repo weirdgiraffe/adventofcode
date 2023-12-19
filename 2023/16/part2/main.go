@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 )
 
 func count(lines [][]byte) int {
@@ -56,9 +57,8 @@ func (s *Stack) Pop() *Item {
 	return item
 }
 
-var stack = &Stack{}
-
 func pass(l, o [][]byte, i, j int, direction byte) {
+	stack := &Stack{}
 	for {
 		if (i < 0) || (j < 0) || (i == len(l)) || (j == len(l[0])) {
 			item := stack.Pop()
@@ -196,15 +196,56 @@ func final(o [][]byte) {
 	}
 }
 
-func solve(lines []string) int {
-	l := make([][]byte, len(lines))
-	o := make([][]byte, len(lines))
-	for i, line := range lines {
-		l[i] = []byte(line)
-		o[i] = bytes.Repeat([]byte{0}, len(line))
-	}
-	pass(l, o, 0, 0, R)
+func variant(l, o [][]byte, i, j int, direction byte) int {
+	pass(l, o, i, j, direction)
 	return count(o)
+}
+
+var mx sync.Mutex
+
+func solve(lines []string) int {
+
+	var wg sync.WaitGroup
+	out := make(chan int)
+	do := func(i, j int, direction byte) {
+		wg.Add(1)
+		go func() {
+			l := make([][]byte, len(lines))
+			o := make([][]byte, len(lines))
+			for i, line := range lines {
+				l[i] = []byte(line)
+				o[i] = bytes.Repeat([]byte{0}, len(line))
+			}
+			out <- variant(l, o, i, j, direction)
+			wg.Done()
+		}()
+	}
+
+	cols := len(lines[0])
+	rows := len(lines)
+	for i := 0; i < rows; i++ {
+		do(i, 0, R)
+		do(i, cols-1, L)
+	}
+	for i := 0; i < cols; i++ {
+		do(0, i, D)
+		do(rows-1, i, U)
+	}
+
+	go func() {
+		wg.Wait()
+		close(out)
+	}()
+
+	var result int
+	for v := range out {
+		if v > result {
+			result = v
+		}
+	}
+
+	return result
+
 }
 
 func main() {
