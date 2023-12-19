@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 )
 
 func count(lines [][]byte) int {
@@ -204,16 +205,18 @@ func variant(l, o [][]byte, i, j int, direction byte) int {
 var mx sync.Mutex
 
 func solve(lines []string) int {
+	l := make([][]byte, len(lines))
+	for i, line := range lines {
+		l[i] = []byte(line)
+	}
 
 	var wg sync.WaitGroup
 	out := make(chan int)
 	do := func(i, j int, direction byte) {
 		wg.Add(1)
 		go func() {
-			l := make([][]byte, len(lines))
 			o := make([][]byte, len(lines))
 			for i, line := range lines {
-				l[i] = []byte(line)
 				o[i] = bytes.Repeat([]byte{0}, len(line))
 			}
 			out <- variant(l, o, i, j, direction)
@@ -255,6 +258,7 @@ func main() {
 		os.Exit(1)
 	}
 	lines := strings.Split(strings.TrimSpace(string(data)), "\n")
+	t0 := time.Now()
 	sum := solve(lines)
-	fmt.Println("sum=", sum)
+	fmt.Println("sum=", sum, "elapsed:", time.Since(t0))
 }
