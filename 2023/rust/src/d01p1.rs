@@ -1,4 +1,6 @@
-use std::io::{self, BufRead};
+mod inputs;
+
+use anyhow::Result;
 
 fn to_digit(iter: &mut dyn Iterator<Item = char>) -> Option<u32> {
     while let Some(v) = iter.next().map(|c| c.to_digit(10)) {
@@ -19,10 +21,11 @@ fn part1<T: Iterator<Item = String>>(it: T) -> u32 {
     it.map(|line| number(&line)).sum::<u32>()
 }
 
-fn main() {
-    let stdin = io::stdin();
-    let iter = stdin.lock().lines().map(|line| line.unwrap());
-    part1(iter);
+fn main() -> Result<()>{
+    let lines = inputs::read_lines("input01.txt")?;
+    let sum = part1(lines.flatten());
+    println!("sum: {}", sum);
+    Result::Ok(())
 }
 
 #[cfg(test)]

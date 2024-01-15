@@ -1,4 +1,6 @@
-use std::io::{self, BufRead};
+mod inputs;
+
+use anyhow::Result;
 use std::ops::ControlFlow;
 
 fn first_digit<'a, T>(mut iter: T) -> Option<u32>
@@ -35,10 +37,11 @@ fn part2<T: Iterator<Item = String>>(it: T) -> u32 {
     it.map(|line| number(&line)).sum()
 }
 
-fn main() {
-    let stdin = io::stdin();
-    let iter = stdin.lock().lines().map(|line| line.unwrap());
-    println!("sum={}", part2(iter));
+fn main() -> Result<()>{
+    let lines = inputs::read_lines("input01.txt")?;
+    let sum = part2(lines.flatten());
+    println!("sum: {}", sum);
+    Result::Ok(())
 }
 
 #[cfg(test)]
